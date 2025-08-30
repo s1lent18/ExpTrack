@@ -75,4 +75,5 @@ dependencies {
     implementation (libs.androidx.runtime.livedata)
     implementation(libs.material3)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.datastore.preferences)
 }
