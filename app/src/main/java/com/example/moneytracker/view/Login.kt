@@ -24,6 +24,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,15 +39,24 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import com.example.moneytracker.models.NetworkResponse
+import com.example.moneytracker.models.model.ValidateRequest
 import com.example.moneytracker.ui.theme.IBMPlex
 import com.example.moneytracker.ui.theme.Lexend
 import com.example.moneytracker.ui.theme.button
 import com.example.moneytracker.ui.theme.buttonDark
 import com.example.moneytracker.ui.theme.buttonLight
+import com.example.moneytracker.viewmodels.navigation.Screens
+import com.example.moneytracker.viewmodels.viewmodel.UserViewModel
 import kotlinx.coroutines.delay
 
 @Composable
-fun Login() {
+fun Login(
+    navController : NavController,
+    userViewModel: UserViewModel = hiltViewModel()
+) {
     Surface {
         val (email, setEmail) = remember { mutableStateOf("") }
         val (password, setPassword) = remember { mutableStateOf("") }
@@ -57,6 +67,7 @@ fun Login() {
         var requestreceived by remember { mutableStateOf(false) }
         var isLoading by remember { mutableStateOf(false) }
         val context = LocalContext.current
+        val loginResult = userViewModel.loginResult.collectAsState()
 
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -152,8 +163,9 @@ fun Login() {
                                     keyboardController?.hide()
                                     isLoading = true
                                     requestreceived = true
-                                    val studentLoginRequest = StudentLoginRequest(email = email, password = password)
-                                    studentAuthViewModel.studentLogin(studentLoginRequest)
+                                    val validateRequest =
+                                        ValidateRequest(email = email, password = password)
+                                    userViewModel.login(validateRequest)
                                 }
                                 else if (email.isEmpty()) {
                                     Toast.makeText(context, "Enter Email", Toast.LENGTH_SHORT).show()
@@ -191,13 +203,13 @@ fun Login() {
                             is NetworkResponse.Success -> {
                                 isLoading = false
                                 LaunchedEffect(Unit) {
-                                    studentTokenViewModel.saveUserData(
-                                        studentData = result.data.studentData,
+                                    userViewModel.saveData(
+                                        signUpResponse = result.data,
                                         timeStamp = System.currentTimeMillis().toString(),
                                     )
                                     Toast.makeText(context, "Login Successful", Toast.LENGTH_SHORT).show()
                                     delay(2000)
-                                    navController.navigate(route = Screens.StudentHome.route)
+                                    navController.navigate(route = Screens.Start.route)
                                 }
                             }
                             null -> {}

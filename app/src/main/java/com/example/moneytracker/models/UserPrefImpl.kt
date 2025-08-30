@@ -28,10 +28,24 @@ class UserPrefImpl (private val dataStore: DataStore<Preferences>) : UserPref {
             }
     }
 
+    override fun getTimeStamp(): Flow<String> {
+        return dataStore.data.catch {
+            emit(emptyPreferences())
+        }.map {
+            it[TIMESTAMP_KEY]?: ""
+        }
+    }
+
     override suspend fun saveUserData(signUpResponse: SignUpResponse) {
         val jsonString = Json.encodeToString(signUpResponse)
         dataStore.edit { preferences ->
             preferences[USER_KEY] = jsonString
+        }
+    }
+
+    override suspend fun saveTimeStamp(timestamp: String) {
+        dataStore.edit {
+            it[TIMESTAMP_KEY] = timestamp
         }
     }
 }
