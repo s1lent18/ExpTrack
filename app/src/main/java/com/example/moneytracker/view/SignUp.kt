@@ -24,7 +24,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -38,25 +40,40 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import com.example.moneytracker.models.NetworkResponse
+import com.example.moneytracker.models.model.SignUpRequest
+import com.example.moneytracker.models.model.ValidateRequest
 import com.example.moneytracker.ui.theme.IBMPlex
 import com.example.moneytracker.ui.theme.Lexend
 import com.example.moneytracker.ui.theme.button
 import com.example.moneytracker.ui.theme.buttonDark
 import com.example.moneytracker.ui.theme.buttonLight
-import kotlinx.coroutines.delay
+import com.example.moneytracker.viewmodels.navigation.Screens
+import com.example.moneytracker.viewmodels.viewmodel.UserViewModel
 
 @Composable
-fun SignUp() {
+fun SignUp(
+    navController : NavController,
+    userViewModel: UserViewModel = hiltViewModel()
+) {
     Surface {
         val (email, setEmail) = remember { mutableStateOf("") }
         val (password, setPassword) = remember { mutableStateOf("") }
+        val (name, setName) = remember { mutableStateOf("") }
+        var budget by remember { mutableIntStateOf(0) }
+        var total by remember { mutableIntStateOf(0) }
         val color = if (isSystemInDarkTheme()) buttonDark else buttonLight
         var passwordVisibility by remember { mutableStateOf(false) }
         val icon = if (passwordVisibility) Icons.Default.RemoveRedEye else Icons.Default.Block
         val keyboardController = LocalSoftwareKeyboardController.current
         var requestreceived by remember { mutableStateOf(false) }
         var isLoading by remember { mutableStateOf(false) }
+        var validated by remember { mutableStateOf(false) }
         val context = LocalContext.current
+        val validateResult = userViewModel.validateResult.collectAsState()
+        val signUpResult = userViewModel.signUpResult.collectAsState()
 
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -91,59 +108,117 @@ fun SignUp() {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Row (
-                        modifier = Modifier.fillMaxWidth(fraction = 0.9f),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Text("Your email address", fontFamily = Lexend)
-                    }
+                    if (!validated) {
+                        Row (
+                            modifier = Modifier.fillMaxWidth(fraction = 0.9f),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Text("Your email address", fontFamily = Lexend)
+                        }
 
-                    AddHeight(20.dp)
+                        AddHeight(20.dp)
 
-                    Input(
-                        label = "ali@uni.com",
-                        value = email,
-                        onValueChange = setEmail,
-                        color = color
-                    )
+                        Input(
+                            label = "ali@uni.com",
+                            value = email,
+                            onValueChange = setEmail,
+                            color = color
+                        )
 
-                    AddHeight(20.dp)
+                        AddHeight(20.dp)
 
-                    Row (
-                        modifier = Modifier.fillMaxWidth(fraction = 0.9f),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Text("Your password", fontFamily = Lexend)
-                    }
+                        Row (
+                            modifier = Modifier.fillMaxWidth(fraction = 0.9f),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Text("Your password", fontFamily = Lexend)
+                        }
 
-                    AddHeight(20.dp)
+                        AddHeight(20.dp)
 
-                    Input(
-                        label = "password",
-                        value = password,
-                        onValueChange = setPassword,
-                        color = color,
-                        trailingIcon = {
-                            IconButton(
-                                onClick = {
-                                    passwordVisibility = !passwordVisibility
+                        Input(
+                            label = "password",
+                            value = password,
+                            onValueChange = setPassword,
+                            color = color,
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = {
+                                        passwordVisibility = !passwordVisibility
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(15.dp)
+                                    )
                                 }
-                            ) {
-                                Icon(
-                                    imageVector = icon,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(15.dp)
-                                )
-                            }
-                        },
-                        visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
-                    )
+                            },
+                            visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
+                        )
 
-                    AddHeight(40.dp)
+                        AddHeight(40.dp)
+                    } else {
 
-                    if (!isLoading) {
+                        Row (
+                            modifier = Modifier.fillMaxWidth(fraction = 0.9f),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Text("Your Name", fontFamily = Lexend)
+                        }
+
+                        AddHeight(20.dp)
+
+                        Input(
+                            label = "Name",
+                            value = name,
+                            onValueChange = setName,
+                            color = color
+                        )
+
+                        AddHeight(20.dp)
+
+                        Row (
+                            modifier = Modifier.fillMaxWidth(fraction = 0.9f),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Text("Your Budget", fontFamily = Lexend)
+                        }
+
+                        AddHeight(20.dp)
+
+                        Input(
+                            label = "Budget",
+                            value = budget.toString(),
+                            onValueChange = { budget = it.toIntOrNull() ?: 0 },
+                            color = color,
+                        )
+
+                        AddHeight(20.dp)
+
+                        Row (
+                            modifier = Modifier.fillMaxWidth(fraction = 0.9f),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Text("Your Total", fontFamily = Lexend)
+                        }
+
+                        AddHeight(20.dp)
+
+                        Input(
+                            label = "Total",
+                            value = total.toString(),
+                            onValueChange = { total = it.toIntOrNull() ?: 0 },
+                            color = color,
+                        )
+                    }
+
+                    if (!isLoading && !validated) {
                         Button(
                             modifier = Modifier.fillMaxWidth(fraction = 0.9f).height(50.dp),
                             shape = RoundedCornerShape(20.dp),
@@ -152,8 +227,41 @@ fun SignUp() {
                                     keyboardController?.hide()
                                     isLoading = true
                                     requestreceived = true
-                                    val studentLoginRequest = StudentLoginRequest(email = email, password = password)
-                                    studentAuthViewModel.studentLogin(studentLoginRequest)
+                                    val validateRequest = ValidateRequest(email = email, password = password)
+                                    userViewModel.validate(validateRequest)
+                                }
+                                else if (email.isEmpty()) {
+                                    Toast.makeText(context, "Enter Email", Toast.LENGTH_SHORT).show()
+                                }
+                                else if (password.isEmpty()) {
+                                    Toast.makeText(context, "Enter password", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = button,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Text("SignUp", fontFamily = Lexend)
+                        }
+                    }
+                    else if (!isLoading) {
+                        Button(
+                            modifier = Modifier.fillMaxWidth(fraction = 0.9f).height(50.dp),
+                            shape = RoundedCornerShape(20.dp),
+                            onClick = {
+                                if (email.isNotEmpty() && password.isNotEmpty()) {
+                                    keyboardController?.hide()
+                                    isLoading = true
+                                    requestreceived = true
+                                    val signUpRequest = SignUpRequest(
+                                        email = email,
+                                        password = password,
+                                        name = name,
+                                        budget = budget,
+                                        total = total
+                                    )
+                                    userViewModel.signUp(signUpRequest)
                                 }
                                 else if (email.isEmpty()) {
                                     Toast.makeText(context, "Enter Email", Toast.LENGTH_SHORT).show()
@@ -179,8 +287,24 @@ fun SignUp() {
                         }
                     }
 
-                    if (email.isNotEmpty() && password.isNotEmpty() && requestreceived) {
-                        when (val result = loginResult.value) {
+                    if (email.isNotEmpty() && password.isNotEmpty() && requestreceived && !validated) {
+                        when (validateResult.value) {
+                            is NetworkResponse.Failure -> {
+                                isLoading = false
+                                Toast.makeText(context, "Incorrect Credentials", Toast.LENGTH_LONG).show()
+                                requestreceived = false
+                            }
+
+                            NetworkResponse.Loading -> { isLoading = true }
+                            is NetworkResponse.Success -> {
+                                isLoading = false
+                                validated = true
+                            }
+                            null -> {}
+                        }
+                    }
+                    else if (email.isNotEmpty() && password.isNotEmpty() && requestreceived && validated) {
+                        when (signUpResult.value) {
                             is NetworkResponse.Failure -> {
                                 isLoading = false
                                 Toast.makeText(context, "Incorrect Credentials", Toast.LENGTH_LONG).show()
@@ -191,13 +315,7 @@ fun SignUp() {
                             is NetworkResponse.Success -> {
                                 isLoading = false
                                 LaunchedEffect(Unit) {
-                                    studentTokenViewModel.saveUserData(
-                                        studentData = result.data.studentData,
-                                        timeStamp = System.currentTimeMillis().toString(),
-                                    )
-                                    Toast.makeText(context, "Login Successful", Toast.LENGTH_SHORT).show()
-                                    delay(2000)
-                                    navController.navigate(route = Screens.StudentHome.route)
+                                    navController.navigate(route = Screens.Login.route)
                                 }
                             }
                             null -> {}
