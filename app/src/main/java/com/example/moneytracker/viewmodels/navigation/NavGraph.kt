@@ -5,6 +5,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.moneytracker.view.Commute
+import com.example.moneytracker.view.Items
 import com.example.moneytracker.view.Login
 import com.example.moneytracker.view.SignUp
 import com.example.moneytracker.view.Start
@@ -29,6 +31,14 @@ fun NavGraph(
 
         composable(Screens.Login.route) {
             Login(navController)
+        }
+
+        composable(Screens.Commute.route) {
+            Commute()
+        }
+
+        composable(Screens.Items.route) {
+            Items()
         }
     }
 }

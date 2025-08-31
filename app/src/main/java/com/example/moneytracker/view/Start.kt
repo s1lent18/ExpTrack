@@ -22,6 +22,7 @@ import com.example.moneytracker.ui.theme.Lexend
 import com.example.moneytracker.ui.theme.button
 import com.example.moneytracker.ui.theme.buttonDark
 import com.example.moneytracker.ui.theme.buttonLight
+import com.example.moneytracker.viewmodels.navigation.Screens
 
 @Composable
 fun Start(
@@ -43,7 +44,7 @@ fun Start(
                     modifier = Modifier.fillMaxWidth(fraction = 0.85f).height(50.dp),
                     shape = RoundedCornerShape(20.dp),
                     onClick = {
-
+                        navController.navigate(Screens.Commute.route)
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = button,
@@ -59,7 +60,7 @@ fun Start(
                     modifier = Modifier.fillMaxWidth(fraction = 0.85f).height(50.dp),
                     shape = RoundedCornerShape(20.dp),
                     onClick = {
-
+                        navController.navigate(Screens.Items.route)
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isSystemInDarkTheme()) buttonDark else buttonLight,
