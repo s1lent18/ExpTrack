@@ -17,13 +17,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.moneytracker.ui.theme.Lexend
 import com.example.moneytracker.ui.theme.button
 import com.example.moneytracker.ui.theme.buttonDark
 import com.example.moneytracker.ui.theme.buttonLight
 
 @Composable
-fun Start() {
+fun Start(
+    navController: NavController
+) {
     Surface {
         Column (
             modifier = Modifier.fillMaxSize(),

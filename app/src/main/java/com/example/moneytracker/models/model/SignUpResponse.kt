@@ -1,5 +1,8 @@
 package com.example.moneytracker.models.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class SignUpResponse(
     val budget: Int =  0,
     val email: String = "",

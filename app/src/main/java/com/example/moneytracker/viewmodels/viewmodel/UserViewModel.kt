@@ -1,5 +1,6 @@
 package com.example.moneytracker.viewmodels.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moneytracker.models.NetworkResponse
@@ -9,6 +10,7 @@ import com.example.moneytracker.models.model.SignUpRequest
 import com.example.moneytracker.models.model.SignUpResponse
 import com.example.moneytracker.models.model.ValidateRequest
 import com.example.moneytracker.models.model.ValidateResponse
+import com.example.moneytracker.view.Login
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -97,6 +99,8 @@ class UserViewModel @Inject constructor(
 
     fun login(validateRequest: ValidateRequest) {
 
+        Log.d("loginLogs", "$validateRequest")
+
         _loginResult.value = NetworkResponse.Loading
 
         viewModelScope.launch {
@@ -105,13 +109,16 @@ class UserViewModel @Inject constructor(
                 if (response.isSuccessful && response.code() == 200) {
                     response.body()?.let {
                         _loginResult.value = NetworkResponse.Success(it)
+                        Log.d("loginLogs", "$response")
                     }
                 }
                 else {
                     _loginResult.value = NetworkResponse.Failure("Wrong Username / Password")
+                    Log.d("loginLogs", "$response")
                 }
             } catch (e: Exception) {
                 _loginResult.value = NetworkResponse.Failure("$e")
+                Log.d("loginLogs", "$e")
             }
         }
     }

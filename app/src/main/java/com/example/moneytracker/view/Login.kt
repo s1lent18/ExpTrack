@@ -89,7 +89,7 @@ fun Login(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text("Gradely", fontFamily = IBMPlex, fontSize = 35.sp)
+                    Text("Money Tracker", fontFamily = IBMPlex, fontSize = 30.sp)
                 }
 
                 Column (
