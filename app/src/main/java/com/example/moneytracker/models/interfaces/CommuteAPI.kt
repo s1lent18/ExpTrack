@@ -2,6 +2,7 @@ package com.example.moneytracker.models.interfaces
 
 import com.example.moneytracker.models.model.AddCommuteRequest
 import com.example.moneytracker.models.model.AddCommuteResponse
+import com.example.moneytracker.models.model.GetCommutesResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -23,12 +24,14 @@ interface CommuteAPI {
     @DELETE("user/{userId}/deleteCommute")
     suspend fun deleteCommute(
         @Path("userId") userId: Int,
-        @Query("id") commuteId: Int
+        @Query("id") commuteId: Int,
+        @Header("Authorization") token: String,
     ): Response<String>
 
     @GET("/user/{userId}/getCommutes")
     suspend fun getCommutes(
-        @Path("userId") userId: Int
-    ) : List<AddCommuteResponse>
+        @Path("userId") userId: Int,
+        @Header("Authorization") token: String,
+    ) : Response<GetCommutesResponse>
 
 }

@@ -47,6 +47,12 @@ class UserViewModel @Inject constructor(
     private val _session = MutableStateFlow(false)
     val session: StateFlow<Boolean> = _session
 
+    val userData = userPref.getUserData().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(),
+        initialValue = SignUpResponse()
+    )
+
     val timeStamp = userPref.getTimeStamp().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
