@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -45,6 +47,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.moneytracker.models.model.AddCommuteRequest
 import com.example.moneytracker.ui.theme.Lexend
@@ -53,8 +56,6 @@ import com.example.moneytracker.ui.theme.buttonDark
 import com.example.moneytracker.ui.theme.buttonLight
 import com.example.moneytracker.viewmodels.viewmodel.CommuteViewModel
 import com.example.moneytracker.viewmodels.viewmodel.UserViewModel
-import java.time.Instant
-import java.time.ZoneId
 import java.util.Date
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
@@ -77,7 +78,7 @@ fun Commute(
         val addCommuteResult = commuteViewModel.addCommuteResult.collectAsState()
         val getCommuteResult = commuteViewModel.getCommuteResult.collectAsState()
         val delCommuteResult = commuteViewModel.deleteCommuteResult.collectAsState()
-        var selectedDate by remember { mutableStateOf("") }
+        var selectedDate by remember { mutableStateOf(Date()) }
         var showDatePicker by remember { mutableStateOf(false) }
 
         LaunchedEffect(addCommuteResult) {
@@ -240,12 +241,16 @@ fun Commute(
                     onClick = {
                         if (from.isNotEmpty() && to.isNotEmpty()) {
                             keyboardController?.hide()
-                            user.value.let {
-                                commuteViewModel.addCommute(
-                                    userId = it.id,
-                                    addCommuteRequest = AddCommuteRequest(0, "","$from->$to"),
-                                    token = "Bearer ${it.token}"
-                                )
+                            selectedDate.let { it1 ->
+                                user.value.let {
+                                    commuteViewModel.addCommute(
+                                        userId = it.id,
+                                        addCommuteRequest = AddCommuteRequest(0, "$from->$to",
+                                            selectedDate
+                                        ),
+                                        token = "Bearer ${it.token}"
+                                    )
+                                }
                             }
                         }
                         else if (from.isEmpty()) {
@@ -273,10 +278,7 @@ fun Commute(
                                 onClick = {
                                     val millis = datePickerState.selectedDateMillis
                                     if (millis != null) {
-                                        val localDate = Instant.ofEpochMilli(millis)
-                                            .atZone(ZoneId.systemDefault())
-                                            .toLocalDate()
-                                        selectedDate = localDate.toString()
+                                        selectedDate = Date(millis)
                                     }
                                     showDatePicker = false
                                 }
@@ -306,7 +308,7 @@ fun Commute(
                     ConstraintLayout (
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        val (topRow) = createRefs()
+                        val (topRow, viewLogs) = createRefs()
 
                         Box(
                             modifier = Modifier
@@ -329,6 +331,27 @@ fun Commute(
                                     Icons.Default.CalendarMonth,
                                     contentDescription = null
                                 )
+                            }
+                        }
+
+                        LazyColumn (
+                            modifier = Modifier.constrainAs(viewLogs) {
+                                top.linkTo(topRow.bottom, margin = 30.dp)
+                                start.linkTo(parent.start)
+                                end.linkTo(parent.end)
+                                width = Dimension.percent(0.9f)
+                                bottom.linkTo(parent.bottom, margin = 60.dp)
+                                height = Dimension.fillToConstraints
+                            }
+                        ) {
+                            items(5) {
+                                CommuteCard(
+                                    source = "Source",
+                                    destination = "Destination",
+                                    price = 250,
+                                    date = Date() // or selectedDate
+                                )
+                                AddHeight(10.dp)
                             }
                         }
                     }
