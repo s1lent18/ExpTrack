@@ -50,6 +50,7 @@ class CommuteViewModel @Inject constructor(
     }
 
     fun getCommute(userId: Int, token: String) {
+        Log.d("sentArgs:", "$userId, $token")
         viewModelScope.launch {
             try {
                 val response = commuteAPI.getCommutes(

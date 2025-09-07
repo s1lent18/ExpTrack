@@ -1,5 +1,6 @@
 package com.example.moneytracker.models.interfaces
 
+import com.example.moneytracker.models.model.LoginResponse
 import com.example.moneytracker.models.model.SignUpRequest
 import com.example.moneytracker.models.model.SignUpResponse
 import com.example.moneytracker.models.model.ValidateRequest
@@ -23,5 +24,5 @@ interface CredentialsAPI {
     @POST("/user/login")
     suspend fun login(
         @Body loginRequest: ValidateRequest
-    ) : Response<SignUpResponse>
+    ) : Response<LoginResponse>
 }

@@ -6,19 +6,21 @@ import androidx.lifecycle.viewModelScope
 import com.example.moneytracker.models.NetworkResponse
 import com.example.moneytracker.models.UserPref
 import com.example.moneytracker.models.interfaces.CredentialsAPI
+import com.example.moneytracker.models.model.LoginResponse
 import com.example.moneytracker.models.model.SignUpRequest
 import com.example.moneytracker.models.model.SignUpResponse
 import com.example.moneytracker.models.model.ValidateRequest
 import com.example.moneytracker.models.model.ValidateResponse
-import com.example.moneytracker.view.Login
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -29,12 +31,11 @@ class UserViewModel @Inject constructor(
 ) : ViewModel() {
 
     init {
-        checkSession()
         startAutoLogoutTimer()
     }
 
-    private val _loginResult = MutableStateFlow<NetworkResponse<SignUpResponse>?>(null)
-    val loginResult: StateFlow<NetworkResponse<SignUpResponse>?> = _loginResult
+    private val _loginResult = MutableStateFlow<NetworkResponse<LoginResponse>?>(null)
+    val loginResult: StateFlow<NetworkResponse<LoginResponse>?> = _loginResult
 
     private val _signUpResult = MutableStateFlow<NetworkResponse<SignUpResponse>?>(null)
     val signUpResult : StateFlow<NetworkResponse<SignUpResponse>?> = _signUpResult
@@ -45,12 +46,22 @@ class UserViewModel @Inject constructor(
     private val sessionDurationMillis = TimeUnit.MINUTES.toMillis(60)
 
     private val _session = MutableStateFlow(false)
-    val session: StateFlow<Boolean> = _session
+    val session = _session
+        .onStart {
+            if (isSessionExpired()) {
+                logout()
+            }
+        }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(),
+            initialValue = false
+        )
 
     val userData = userPref.getUserData().stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(),
-        initialValue = SignUpResponse()
+        started = SharingStarted.Eagerly,
+        initialValue = runBlocking { userPref.getUserData().first() }
     )
 
     val timeStamp = userPref.getTimeStamp().stateIn(
@@ -58,14 +69,6 @@ class UserViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(),
         initialValue = ""
     )
-
-    private fun checkSession() {
-        viewModelScope.launch {
-            val expired = isSessionExpired()
-            _session.value = !expired
-            if (expired) logout()
-        }
-    }
 
     private suspend fun isSessionExpired(): Boolean {
         val loginTimestamp = userPref.getTimeStamp().first().toLongOrNull() ?: return true
@@ -78,27 +81,30 @@ class UserViewModel @Inject constructor(
         }
     }
 
-    fun saveUserData(signUpResponse: SignUpResponse) {
+    fun saveUserData(loginResponse: LoginResponse) {
+        Log.d("CheckLogs", "$loginResponse")
         viewModelScope.launch {
-            userPref.saveUserData(signUpResponse)
+            userPref.saveUserData(loginResponse)
         }
     }
 
-    fun logout() {
+    fun logout(clearUserData: Boolean = true) {
         viewModelScope.launch {
-            userPref.saveUserData(SignUpResponse())
+            if (clearUserData) {
+                userPref.saveUserData(LoginResponse())
+            }
             userPref.saveTimeStamp("")
         }
     }
 
-    fun saveData(signUpResponse: SignUpResponse, timeStamp: String) {
-        saveUserData(signUpResponse)
+    fun saveData(loginResponse: LoginResponse, timeStamp: String) {
+        saveUserData(loginResponse)
         saveTimeStamp(timeStamp)
     }
 
     private fun startAutoLogoutTimer() {
         viewModelScope.launch {
-            delay(sessionDurationMillis)
+            delay(600000)
             logout()
         }
     }
@@ -115,7 +121,8 @@ class UserViewModel @Inject constructor(
                 if (response.isSuccessful && response.code() == 200) {
                     response.body()?.let {
                         _loginResult.value = NetworkResponse.Success(it)
-                        Log.d("loginLogs", "$response")
+                        saveData(it, System.currentTimeMillis().toString())
+                        Log.d("loginLogs", "${response.body()}")
                     }
                 }
                 else {

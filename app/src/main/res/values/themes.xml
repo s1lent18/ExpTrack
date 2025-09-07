@@ -2,4 +2,8 @@
 <resources>
 
     <style name="Theme.MoneyTracker" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.SplashScreen" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#862121</item>
+        <item name="android:windowBackground">@drawable/splashbackground</item>
+    </style>
 </resources>

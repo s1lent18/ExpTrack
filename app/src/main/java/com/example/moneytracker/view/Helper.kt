@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -109,25 +110,32 @@ fun CommuteCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            contentAlignment = Alignment.Center
+            //contentAlignment = Alignment.Center
         ) {
             // Arrow Row
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(50.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(source, fontFamily = Lexend)
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = null,
-                    tint = Color(0xFF66CCFF),
-                    modifier = Modifier.size(24.dp)
-                )
-                Text(destination, fontFamily = Lexend)
+                Box(
+                    modifier = Modifier.weight(0.3f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(source, fontFamily = Lexend, fontSize = 13.sp)
+                }
+
+                Row (modifier = Modifier.weight(0.4f)) {
+
+                }
+                Box(
+                    modifier = Modifier.weight(0.3f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(destination, fontFamily = Lexend, fontSize = 13.sp)
+                }
             }
 
-            // Price above the arrow (center aligned)
             Text(
                 text = price.toString(),
                 modifier = Modifier.align(Alignment.TopCenter),
@@ -145,4 +153,11 @@ fun CommuteCard(
             )
         }
     }
+}
+
+fun splitRoute(route: String): Pair<String, String> {
+    val parts = route.split("->")
+    val source = parts.getOrNull(0).orEmpty()
+    val destination = parts.getOrNull(1).orEmpty()
+    return source to destination
 }

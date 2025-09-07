@@ -1,9 +1,11 @@
 package com.example.moneytracker.models
 
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import com.example.moneytracker.models.model.LoginResponse
 import com.example.moneytracker.models.model.SignUpResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -13,18 +15,18 @@ import kotlinx.serialization.json.Json
 
 class UserPrefImpl (private val dataStore: DataStore<Preferences>) : UserPref {
 
-    override fun getUserData(): Flow<SignUpResponse> {
+    override fun getUserData(): Flow<LoginResponse> {
         return dataStore.data
             .catch {
                 emit(emptyPreferences())
             }.map { preferences ->
                 preferences[USER_KEY]?.let {
                     try {
-                        Json.decodeFromString<SignUpResponse>(it)
+                        Json.decodeFromString<LoginResponse>(it)
                     } catch (_: Exception) {
                         null
                     }
-                } as SignUpResponse
+                } as LoginResponse
             }
     }
 
@@ -36,8 +38,10 @@ class UserPrefImpl (private val dataStore: DataStore<Preferences>) : UserPref {
         }
     }
 
-    override suspend fun saveUserData(signUpResponse: SignUpResponse) {
-        val jsonString = Json.encodeToString(signUpResponse)
+    override suspend fun saveUserData(loginResponse: LoginResponse) {
+        Log.d("CheckLogs", "$loginResponse")
+        val jsonString = Json.encodeToString(loginResponse)
+        Log.d("CheckLogsFinal", jsonString)
         dataStore.edit { preferences ->
             preferences[USER_KEY] = jsonString
         }

@@ -1,5 +1,6 @@
 package com.example.moneytracker.view
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -203,10 +204,6 @@ fun Login(
                             is NetworkResponse.Success -> {
                                 isLoading = false
                                 LaunchedEffect(Unit) {
-                                    userViewModel.saveData(
-                                        signUpResponse = result.data,
-                                        timeStamp = System.currentTimeMillis().toString(),
-                                    )
                                     Toast.makeText(context, "Login Successful", Toast.LENGTH_SHORT).show()
                                     delay(2000)
                                     navController.navigate(route = Screens.Start.route)

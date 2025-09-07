@@ -1,5 +1,6 @@
 package com.example.moneytracker.view
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -76,7 +77,7 @@ fun Commute(
         val context = LocalContext.current
         val user = userViewModel.userData.collectAsState()
         val addCommuteResult = commuteViewModel.addCommuteResult.collectAsState()
-        val getCommuteResult = commuteViewModel.getCommuteResult.collectAsState()
+        val getCommuteResult = commuteViewModel.getCommuteResult.collectAsState().value
         val delCommuteResult = commuteViewModel.deleteCommuteResult.collectAsState()
         var selectedDate by remember { mutableStateOf(Date()) }
         var showDatePicker by remember { mutableStateOf(false) }
@@ -125,9 +126,10 @@ fun Commute(
                         onClick = {
                             get = true
                             user.value.let {
+                                Log.d("notSentArgs", "${it.userData.id} ${it.userData.token}")
                                 commuteViewModel.getCommute(
-                                    userId = it.id,
-                                    token = "Bearer ${it.token}"
+                                    userId = it.userData.id,
+                                    token = "Bearer ${it.userData.token}"
                                 )
                             }
                         },
@@ -244,11 +246,11 @@ fun Commute(
                             selectedDate.let { it1 ->
                                 user.value.let {
                                     commuteViewModel.addCommute(
-                                        userId = it.id,
+                                        userId = it.userData.id,
                                         addCommuteRequest = AddCommuteRequest(0, "$from->$to",
                                             selectedDate
                                         ),
-                                        token = "Bearer ${it.token}"
+                                        token = "Bearer ${it.userData.token}"
                                     )
                                 }
                             }
@@ -296,7 +298,7 @@ fun Commute(
             }
 
             if (get) {
-                if (getCommuteResult.value == null) {
+                if (getCommuteResult == null) {
                     Box (
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -339,17 +341,19 @@ fun Commute(
                                 top.linkTo(topRow.bottom, margin = 30.dp)
                                 start.linkTo(parent.start)
                                 end.linkTo(parent.end)
-                                width = Dimension.percent(0.9f)
+                                width = Dimension.percent(1f)
                                 bottom.linkTo(parent.bottom, margin = 60.dp)
                                 height = Dimension.fillToConstraints
-                            }
+                            },
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            items(5) {
+                            items(getCommuteResult.commutes) { commute ->
+                                val (source, destination) = splitRoute(commute.route)
                                 CommuteCard(
-                                    source = "Source",
-                                    destination = "Destination",
-                                    price = 250,
-                                    date = Date() // or selectedDate
+                                    source = source,
+                                    destination = destination,
+                                    price = commute.price,
+                                    date = commute.date
                                 )
                                 AddHeight(10.dp)
                             }
