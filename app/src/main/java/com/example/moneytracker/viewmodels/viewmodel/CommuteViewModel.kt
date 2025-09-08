@@ -94,5 +94,4 @@ class CommuteViewModel @Inject constructor(
             }
         }
     }
-
 }

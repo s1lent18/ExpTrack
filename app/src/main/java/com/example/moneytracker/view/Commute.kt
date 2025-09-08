@@ -69,6 +69,7 @@ fun Commute(
         val (from, setFrom) = remember { mutableStateOf("") }
         val (to, setTo) = remember { mutableStateOf("") }
         var (price) = remember { mutableIntStateOf(0) }
+        var priceText by remember { mutableStateOf("") }
         val color = if (isSystemInDarkTheme()) buttonDark else buttonLight
         var add by remember { mutableStateOf(false) }
         var get by remember { mutableStateOf(false) }
@@ -162,137 +163,150 @@ fun Commute(
             }
 
             if (add) {
-                Row (
-                    modifier = Modifier.fillMaxWidth(fraction = 0.9f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Text("Start", fontFamily = Lexend)
-                }
+                    Row (
+                        modifier = Modifier.fillMaxWidth(fraction = 0.9f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Text("Start", fontFamily = Lexend)
+                    }
 
-                AddHeight(20.dp)
+                    AddHeight(20.dp)
 
-                Input(
-                    label = "from",
-                    value = from,
-                    onValueChange = setFrom,
-                    color = color
-                )
-
-                AddHeight(20.dp)
-
-                Row (
-                    modifier = Modifier.fillMaxWidth(fraction = 0.9f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    Text("Destination", fontFamily = Lexend)
-                }
-
-                AddHeight(20.dp)
-
-                Input(
-                    label = "To",
-                    value = to,
-                    onValueChange = setTo,
-                    color = color,
-                )
-
-                AddHeight(20.dp)
-
-                Row (
-                    modifier = Modifier.fillMaxWidth(fraction = 0.9f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
                     Input(
-                        label = "Price",
-                        value = price.toString(),
-                        onValueChange = { price = it.toIntOrNull() ?: 0 },
+                        label = "from",
+                        value = from,
+                        onValueChange = setFrom,
                         color = color
                     )
 
-                    Card(
-                        modifier = Modifier.size(40.dp),
-                        shape = CircleShape,
-                        colors = CardDefaults.cardColors(
+                    AddHeight(20.dp)
+
+                    Row (
+                        modifier = Modifier.fillMaxWidth(fraction = 0.9f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Text("Destination", fontFamily = Lexend)
+                    }
+
+                    AddHeight(20.dp)
+
+                    Input(
+                        label = "To",
+                        value = to,
+                        onValueChange = setTo,
+                        color = color,
+                    )
+
+                    AddHeight(40.dp)
+
+                    Row (
+                        modifier = Modifier.fillMaxWidth(fraction = 0.9f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Input(
+                            label = "Price",
+                            value = priceText,
+                            onValueChange = { newText ->
+                                priceText = newText
+                                price = newText.toIntOrNull() ?: 0
+                            },
+                            color = color,
+                            modifier = Modifier.fillMaxWidth(fraction = 0.6f)
+                        )
+
+                        Card(
+                            modifier = Modifier.size(50.dp),
+                            shape = CircleShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = button,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            IconButton(
+                                modifier = Modifier.fillMaxSize(),
+                                shape = CircleShape,
+                                onClick = {
+                                    showDatePicker = true
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Default.CalendarMonth,
+                                    contentDescription = null,
+                                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                                )
+                            }
+                        }
+                    }
+
+                    AddHeight(40.dp)
+
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth(fraction = 0.9f)
+                            .height(50.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        onClick = {
+                            if (from.isNotEmpty() && to.isNotEmpty()) {
+                                keyboardController?.hide()
+                                selectedDate.let { it1 ->
+                                    user.value.let {
+                                        commuteViewModel.addCommute(
+                                            userId = it.userData.id,
+                                            addCommuteRequest = AddCommuteRequest(price, "$from->$to",
+                                                selectedDate
+                                            ),
+                                            token = "Bearer ${it.userData.token}"
+                                        )
+                                    }
+                                }
+                            }
+                            else if (from.isEmpty()) {
+                                Toast.makeText(context, "Source Empty", Toast.LENGTH_SHORT).show()
+                            }
+                            else if (to.isEmpty()) {
+                                Toast.makeText(context, "Destination Empty", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
                             containerColor = button,
                             contentColor = Color.White
                         )
                     ) {
-                        IconButton(
-                            onClick = {
-                                showDatePicker = true
+                        Text("Add", fontFamily = Lexend)
+                    }
+
+                    if (showDatePicker) {
+                        val datePickerState = rememberDatePickerState()
+
+                        DatePickerDialog(
+                            onDismissRequest = { showDatePicker = false },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        val millis = datePickerState.selectedDateMillis
+                                        if (millis != null) {
+                                            selectedDate = Date(millis)
+                                        }
+                                        showDatePicker = false
+                                    }
+                                ) { Text("OK") }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showDatePicker = false }) {
+                                    Text("Cancel")
+                                }
                             }
                         ) {
-                            Icon(
-                                Icons.Default.CalendarMonth,
-                                contentDescription = null
-                            )
+                            DatePicker(state = datePickerState)
                         }
-                    }
-                }
-
-                AddHeight(40.dp)
-
-                Button(
-                    modifier = Modifier
-                        .fillMaxWidth(fraction = 0.9f)
-                        .height(50.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    onClick = {
-                        if (from.isNotEmpty() && to.isNotEmpty()) {
-                            keyboardController?.hide()
-                            selectedDate.let { it1 ->
-                                user.value.let {
-                                    commuteViewModel.addCommute(
-                                        userId = it.userData.id,
-                                        addCommuteRequest = AddCommuteRequest(0, "$from->$to",
-                                            selectedDate
-                                        ),
-                                        token = "Bearer ${it.userData.token}"
-                                    )
-                                }
-                            }
-                        }
-                        else if (from.isEmpty()) {
-                            Toast.makeText(context, "Source Empty", Toast.LENGTH_SHORT).show()
-                        }
-                        else if (to.isEmpty()) {
-                            Toast.makeText(context, "Destination Empty", Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = button,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text("Login", fontFamily = Lexend)
-                }
-
-                if (showDatePicker) {
-                    val datePickerState = rememberDatePickerState()
-
-                    DatePickerDialog(
-                        onDismissRequest = { showDatePicker = false },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    val millis = datePickerState.selectedDateMillis
-                                    if (millis != null) {
-                                        selectedDate = Date(millis)
-                                    }
-                                    showDatePicker = false
-                                }
-                            ) { Text("OK") }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { showDatePicker = false }) {
-                                Text("Cancel")
-                            }
-                        }
-                    ) {
-                        DatePicker(state = datePickerState)
                     }
                 }
             }
